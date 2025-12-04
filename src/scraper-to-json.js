@@ -287,21 +287,31 @@ function dataToJson(data, type) {
         const numberedFieldName = fieldName + numberSuffix;
         cleanedItem[numberedFieldName] = value;
 
-        // Add logo fields based on field type
+        // Add logo and shortened team name fields based on field type
         if (isTeamField) {
           // Generic team field - add generic logo
           const logoFieldName = 'logo' + numberSuffix;
           cleanedItem[logoFieldName] = getTeamLogo(value);
+
+          // Add shortened team name
+          const equFieldName = 'equ' + numberSuffix;
+          cleanedItem[equFieldName] = getShortenedTeamName(value);
         }
         if (isHomeTeamField) {
-          // Home team field - add home_logo only
+          // Home team field - add home_logo and home_equ
           const homeLogoFieldName = 'home_logo' + numberSuffix;
           cleanedItem[homeLogoFieldName] = getTeamLogo(value);
+
+          const homeEquFieldName = 'home_equ' + numberSuffix;
+          cleanedItem[homeEquFieldName] = getShortenedTeamName(value);
         }
         if (isAwayTeamField) {
-          // Away team field - add away_logo only
+          // Away team field - add away_logo and away_equ
           const awayLogoFieldName = 'away_logo' + numberSuffix;
           cleanedItem[awayLogoFieldName] = getTeamLogo(value);
+
+          const awayEquFieldName = 'away_equ' + numberSuffix;
+          cleanedItem[awayEquFieldName] = getShortenedTeamName(value);
         }
       } else {
         // Special handling for individual stats
