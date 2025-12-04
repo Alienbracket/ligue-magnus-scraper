@@ -1,0 +1,28 @@
+{
+  "scraper": {
+    "urls": [
+      {
+        "url": "https://liguemagnus.com/calendrier-resultats/",
+        "filename": "Todays_games.json",
+        "type": "todaysgames",
+        "useAPI": true,
+        "dateFilter": "today"
+      }
+    ],
+    "intervalMinutes": 60,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+  },
+  "server": {
+    "port": 3000,
+    "host": "0.0.0.0"
+  },
+  "output": {
+    "directory": "../output"
+  },
+  "logging": {
+    "enabled": true,
+    "directory": "../logs",
+    "console": true,
+    "file": true
+  }
+}

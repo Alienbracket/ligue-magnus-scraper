@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Output files
+output/
+*.json
+!package.json
+!package-lock.json
+!config/*.json
+
+# Environment files
+.env
+.credentials.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+nul
+
+# Debug files
+debug/
+shell-snapshots/
+
+# Claude files
+.claude/
+plans/
+todos/
+statsig/
+file-history/
+history.jsonl
+
+# Project-specific
+vmix-urls.txt

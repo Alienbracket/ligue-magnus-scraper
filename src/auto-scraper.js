@@ -1,0 +1,263 @@
+const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+const Logger = require('./logger');
+
+// Load configuration
+let config;
+try {
+  const configFile = fs.readFileSync(path.join(__dirname, '../config/config.json'), 'utf8');
+  config = JSON.parse(configFile);
+} catch (err) {
+  console.error('Failed to load config.json:', err.message);
+  console.error('Using default configuration...');
+  config = {
+    scraper: { intervalMinutes: 5 },
+    server: { port: 3000 },
+    logging: { enabled: true, directory: '../logs', console: true, file: true }
+  };
+}
+
+const SCRAPE_INTERVAL = config.scraper.intervalMinutes * 60 * 1000;
+const HTTP_SERVER_PORT = config.server.port;
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY = 30000; // 30 seconds
+
+let isScraperRunning = false;
+let httpServer = null;
+let fastScraper = null;
+let httpServerRestarts = 0;
+let consecutiveFailures = 0;
+const logger = new Logger(config.logging);
+
+function startHttpServer() {
+  return new Promise((resolve, reject) => {
+    // Kill existing HTTP server if it exists
+    if (httpServer) {
+      logger.warn('Stopping existing HTTP server...');
+      httpServer.kill();
+      httpServer = null;
+    }
+
+    logger.info('Starting HTTP server...');
+
+    const scriptPath = path.join(__dirname, 'http-server.js');
+    httpServer = spawn(process.execPath, [scriptPath], {
+      cwd: __dirname,
+      stdio: 'inherit'
+    });
+
+    httpServer.on('error', (err) => {
+      logger.error(`HTTP Server error: ${err.message}`);
+      reject(err);
+    });
+
+    httpServer.on('close', (code) => {
+      if (code !== 0 && code !== null) {
+        logger.error(`HTTP Server crashed with code ${code}`);
+
+        // Ensure old process is fully terminated
+        httpServer = null;
+
+        // Auto-restart HTTP server with longer delay to allow port release
+        if (httpServerRestarts < MAX_RETRY_ATTEMPTS) {
+          httpServerRestarts++;
+          logger.warn(`Attempting to restart HTTP server (${httpServerRestarts}/${MAX_RETRY_ATTEMPTS})...`);
+          setTimeout(() => {
+            startHttpServer()
+              .then(() => {
+                httpServerRestarts = 0;
+                logger.success('HTTP server restarted successfully');
+              })
+              .catch(err => {
+                logger.error(`Failed to restart HTTP server: ${err.message}`);
+              });
+          }, 10000); // Increased from 5000 to 10000ms to allow port to be released
+        } else {
+          logger.error('HTTP server failed too many times. Manual restart required.');
+        }
+      }
+    });
+
+    // Give it a moment to start
+    setTimeout(() => {
+      logger.success(`HTTP Server started on port ${HTTP_SERVER_PORT}`);
+      resolve();
+    }, 2000);
+  });
+}
+
+function startFastScraper() {
+  return new Promise((resolve) => {
+    if (fastScraper) {
+      logger.warn('Fast scraper already running');
+      resolve();
+      return;
+    }
+
+    logger.info('Starting fast scraper (1-minute updates for today\'s games)...');
+
+    const scriptPath = path.join(__dirname, 'fast-scraper.js');
+    fastScraper = spawn(process.execPath, [scriptPath], {
+      cwd: __dirname,
+      stdio: 'pipe' // Use pipe to suppress verbose output
+    });
+
+    fastScraper.on('error', (err) => {
+      logger.error(`Fast scraper error: ${err.message}`);
+    });
+
+    fastScraper.on('close', (code) => {
+      logger.warn(`Fast scraper stopped with code ${code}`);
+      fastScraper = null;
+    });
+
+    // Give it a moment to start
+    setTimeout(() => {
+      logger.success('Fast scraper started');
+      resolve();
+    }, 1000);
+  });
+}
+
+function runScraper() {
+  return new Promise((resolve, reject) => {
+    if (isScraperRunning) {
+      logger.warn('Scraper already running, skipping...');
+      resolve();
+      return;
+    }
+
+    isScraperRunning = true;
+    logger.info('Running scraper...');
+
+    const scriptPath = path.join(__dirname, 'scraper-to-json.js');
+    const scraper = spawn(process.execPath, [scriptPath], {
+      cwd: __dirname,
+      stdio: 'inherit'
+    });
+
+    scraper.on('close', (code) => {
+      isScraperRunning = false;
+      if (code === 0) {
+        consecutiveFailures = 0;
+        logger.success('Scraper completed successfully');
+        resolve();
+      } else {
+        consecutiveFailures++;
+        logger.error(`Scraper exited with code ${code} (${consecutiveFailures} consecutive failures)`);
+
+        if (consecutiveFailures >= MAX_RETRY_ATTEMPTS) {
+          logger.error('Too many consecutive failures. Check logs and website availability.');
+        }
+
+        reject(new Error(`Scraper failed with code ${code}`));
+      }
+    });
+
+    scraper.on('error', (err) => {
+      isScraperRunning = false;
+      consecutiveFailures++;
+      logger.error(`Scraper error: ${err.message}`);
+      reject(err);
+    });
+  });
+}
+
+async function runScraperWithRetry() {
+  let attempts = 0;
+
+  while (attempts < MAX_RETRY_ATTEMPTS) {
+    try {
+      await runScraper();
+      return; // Success, exit retry loop
+    } catch (err) {
+      attempts++;
+      if (attempts < MAX_RETRY_ATTEMPTS) {
+        logger.warn(`Retrying in ${RETRY_DELAY / 1000} seconds... (Attempt ${attempts + 1}/${MAX_RETRY_ATTEMPTS})`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      } else {
+        logger.error(`Failed after ${MAX_RETRY_ATTEMPTS} attempts. Will retry at next scheduled time.`);
+      }
+    }
+  }
+}
+
+async function scheduleNextRun() {
+  const minutes = SCRAPE_INTERVAL / 60000;
+  logger.info(`Next scrape scheduled in ${minutes} minutes`);
+
+  setTimeout(async () => {
+    await runScraperWithRetry();
+    scheduleNextRun();
+  }, SCRAPE_INTERVAL);
+}
+
+async function start() {
+  console.log('\n╔════════════════════════════════════════╗');
+  console.log('║   Ligue Magnus Stats Auto-Scraper    ║');
+  console.log('╚════════════════════════════════════════╝\n');
+
+  logger.info(`Configuration loaded`);
+  logger.info(`Scrape interval: ${config.scraper.intervalMinutes} minutes`);
+  logger.info(`HTTP Port: ${HTTP_SERVER_PORT}`);
+  logger.info(`Logging: ${config.logging.file ? 'File + Console' : 'Console only'}\n`);
+
+  try {
+    // Run scraper immediately on startup
+    await runScraperWithRetry();
+
+    // Start HTTP server
+    await startHttpServer();
+
+    // Start fast scraper for today's games (1-minute updates)
+    await startFastScraper();
+
+    // Schedule next runs
+    scheduleNextRun();
+
+    logger.info('System running. Press Ctrl+C to stop.\n');
+  } catch (err) {
+    logger.error(`Startup error: ${err.message}`);
+    logger.error('System will continue trying at scheduled intervals...');
+
+    // Even if initial scrape fails, start HTTP server and schedule
+    try {
+      await startHttpServer();
+      scheduleNextRun();
+    } catch (serverErr) {
+      logger.error(`Critical error: ${serverErr.message}`);
+      process.exit(1);
+    }
+  }
+}
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n\n');
+  logger.info('Shutting down gracefully...');
+
+  if (httpServer) {
+    httpServer.kill();
+  }
+
+  if (fastScraper) {
+    fastScraper.kill();
+  }
+
+  logger.info('Stopped');
+  process.exit(0);
+});
+
+// Handle uncaught errors
+process.on('uncaughtException', (err) => {
+  logger.error(`Uncaught Exception: ${err.message}`);
+  logger.error(err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error(`Unhandled Rejection: ${reason}`);
+});
+
+// Start the system
+start();

@@ -1,0 +1,109 @@
+{
+  "scraper": {
+    "urls": [
+      {
+        "url": "https://liguemagnus.com/statistiques-individuelles/?tri_p=nombre_points-desc&actif=stats&onglet=joueurs&phase=560",
+        "filename": "stats-points.json",
+        "type": "points"
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-individuelles/?phase=560&tri_p=nombre_buts-desc&actif=stats&onglet=joueurs",
+        "filename": "stats-goals.json",
+        "type": "goals"
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-individuelles/?phase=560&tri_p=nombre_assists-desc&actif=stats&onglet=joueurs",
+        "filename": "stats-assists.json",
+        "type": "assists"
+      },
+      {
+        "url": "https://liguemagnus.com/saison-reguliere/classement/?phase=560",
+        "filename": "standings.json",
+        "type": "standings"
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-individuelles/?tri_p=nombre_assists-desc&actif=stats&onglet=joueurs&page_p=1",
+        "filename": "GK70plus.json",
+        "type": "gk70plus",
+        "tableIndex": 1
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-individuelles/?tri_p=nombre_assists-desc&actif=stats&onglet=joueurs&page_p=1",
+        "filename": "GK70minus.json",
+        "type": "gk70minus",
+        "tableIndex": 2
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "filename": "Powerplay.json",
+        "type": "powerplay",
+        "tableIndex": 0
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "filename": "Underlage.json",
+        "type": "underlage",
+        "tableIndex": 1
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "filename": "Current-streaks.json",
+        "type": "currentstreaks",
+        "tableIndex": 2
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "filename": "Season-streaks.json",
+        "type": "seasonstreaks",
+        "tableIndex": 3
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "filename": "Shots.json",
+        "type": "shots",
+        "tableIndex": 4
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "filename": "Shootouts.json",
+        "type": "shootouts",
+        "tableIndex": 5
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "filename": "Attendance.json",
+        "type": "attendance",
+        "tableIndex": 6
+      },
+      {
+        "url": "https://liguemagnus.com/calendrier-resultats/",
+        "filename": "Todays_games.json",
+        "type": "todaysgames",
+        "useAPI": true,
+        "dateFilter": "today"
+      },
+      {
+        "url": "https://liguemagnus.com/calendrier-resultats/",
+        "filename": "Upcoming_games.json",
+        "type": "upcominggames",
+        "useAPI": true,
+        "dateFilter": "upcoming"
+      }
+    ],
+    "intervalMinutes": 60,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+  },
+  "server": {
+    "port": 3000,
+    "host": "0.0.0.0"
+  },
+  "output": {
+    "directory": "../output"
+  },
+  "logging": {
+    "enabled": true,
+    "directory": "../logs",
+    "console": true,
+    "file": true
+  }
+}
