@@ -26,6 +26,7 @@ const RETRY_DELAY = 30000; // 30 seconds
 let isScraperRunning = false;
 let httpServer = null;
 let fastScraper = null;
+let plingWatcher = null;
 let httpServerRestarts = 0;
 let consecutiveFailures = 0;
 const logger = new Logger(config.logging);
@@ -115,6 +116,39 @@ function startFastScraper() {
     // Give it a moment to start
     setTimeout(() => {
       logger.success('Fast scraper started');
+      resolve();
+    }, 1000);
+  });
+}
+
+function startPlingWatcher() {
+  return new Promise((resolve) => {
+    if (plingWatcher) {
+      logger.warn('Pling watcher already running');
+      resolve();
+      return;
+    }
+
+    logger.info('Starting pling watcher (live goal notifications with 10s delay)...');
+
+    const scriptPath = path.join(__dirname, 'pling-watcher.js');
+    plingWatcher = spawn(process.execPath, [scriptPath], {
+      cwd: __dirname,
+      stdio: 'inherit'
+    });
+
+    plingWatcher.on('error', (err) => {
+      logger.error(`Pling watcher error: ${err.message}`);
+    });
+
+    plingWatcher.on('close', (code) => {
+      logger.warn(`Pling watcher stopped with code ${code}`);
+      plingWatcher = null;
+    });
+
+    // Give it a moment to start
+    setTimeout(() => {
+      logger.success('Pling watcher started');
       resolve();
     }, 1000);
   });
@@ -213,6 +247,9 @@ async function start() {
     // Start fast scraper for today's games (1-minute updates)
     await startFastScraper();
 
+    // Start pling watcher for live goal notifications
+    await startPlingWatcher();
+
     // Schedule next runs
     scheduleNextRun();
 
@@ -243,6 +280,10 @@ process.on('SIGINT', () => {
 
   if (fastScraper) {
     fastScraper.kill();
+  }
+
+  if (plingWatcher) {
+    plingWatcher.kill();
   }
 
   logger.info('Stopped');
