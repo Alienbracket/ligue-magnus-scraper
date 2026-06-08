@@ -6,7 +6,14 @@
   "scripts": {
     "start": "node auto-scraper.js",
     "scrape": "node scraper-to-json.js",
-    "serve": "node http-server.js"
+    "scrape-teams": "node src/team-stats-scraper.js",
+    "process-lineup": "node src/lineup-processor.js",
+    "serve": "node src/http-server.js",
+    "start-all": "./start-all.sh",
+    "stop-all": "pm2 delete all",
+    "restart-all": "pm2 restart all",
+    "status": "pm2 list",
+    "logs": "pm2 logs"
   },
   "keywords": [
     "vmix",

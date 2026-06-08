@@ -11,7 +11,7 @@ try {
 } catch (err) {
   console.error('Failed to load config.json, using defaults');
   config = {
-    server: { port: 3000, host: '0.0.0.0' },
+    server: { port: 3000, host: '0.0.0.0', hostname: 'data.borka.live' },
     output: { directory: '../output' }
   };
 }
@@ -50,6 +50,48 @@ function getLocalIpAddresses() {
 
 async function handleRequest(req, res) {
   console.log(`${new Date().toLocaleTimeString()} - ${req.method} ${req.url}`);
+
+  // Handle CORS preflight requests (OPTIONS)
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400'
+    });
+    res.end();
+    return;
+  }
+
+  // Handle POST requests for pling.json
+  if (req.method === 'POST' && req.url === '/pling.json') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', async () => {
+      try {
+        const data = JSON.parse(body);
+        const filePath = path.join(OUTPUT_DIR, 'pling.json');
+        await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify({ success: true, message: 'pling.json updated' }));
+        console.log(`  ✓ Updated pling.json via POST`);
+      } catch (err) {
+        res.writeHead(400, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+        console.log(`  ✗ Failed to update pling.json: ${err.message}`);
+      }
+    });
+    return;
+  }
 
   // Health check endpoint
   if (req.url === '/health') {
@@ -96,7 +138,7 @@ async function handleRequest(req, res) {
       const files = await fs.readdir(OUTPUT_DIR);
       const jsonFiles = files.filter(f => f.endsWith('.json'));
       const ips = getLocalIpAddresses();
-      const displayIp = ips[0] || 'localhost';
+      const displayIp = config.server.hostname || ips[0] || 'data.borka.live';
 
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(`
@@ -154,7 +196,7 @@ async function handleRequest(req, res) {
   } catch (err) {
     if (err.code === 'ENOENT') {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('File not found. Available files at http://localhost:' + PORT);
+      res.end('File not found. Available files at http://data.borka.live:' + PORT);
     } else {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('Server error: ' + err.message);
@@ -262,43 +304,34 @@ const server = http.createServer(handleRequest);
 
 server.listen(PORT, '0.0.0.0', () => {
   const ips = getLocalIpAddresses();
+  const displayHost = config.server.hostname || ips[0] || 'data.borka.live';
 
   console.log('\n=== HTTP Server Started ===');
   console.log(`\nLocal access:`);
-  console.log(`  http://localhost:${PORT}`);
+  console.log(`  http://data.borka.live:${PORT}`);
 
-  if (ips.length > 0) {
-    console.log(`\nNetwork access:`);
-    console.log(`\nPlayer Stats:`);
-    ips.forEach(ip => {
-      console.log(`  http://${ip}:${PORT}/stats-points.json`);
-      console.log(`  http://${ip}:${PORT}/stats-goals.json`);
-      console.log(`  http://${ip}:${PORT}/stats-assists.json`);
-    });
-    console.log(`\nGoalie Stats:`);
-    ips.forEach(ip => {
-      console.log(`  http://${ip}:${PORT}/GK70plus.json`);
-      console.log(`  http://${ip}:${PORT}/GK70minus.json`);
-    });
-    console.log(`\nTeam Stats:`);
-    ips.forEach(ip => {
-      console.log(`  http://${ip}:${PORT}/standings.json`);
-      console.log(`  http://${ip}:${PORT}/Powerplay.json`);
-      console.log(`  http://${ip}:${PORT}/Underlage.json`);
-      console.log(`  http://${ip}:${PORT}/Current-streaks.json`);
-      console.log(`  http://${ip}:${PORT}/Season-streaks.json`);
-      console.log(`  http://${ip}:${PORT}/Shots.json`);
-      console.log(`  http://${ip}:${PORT}/Shootouts.json`);
-      console.log(`  http://${ip}:${PORT}/Attendance.json`);
-    });
-    console.log(`\nGames/Schedule:`);
-    ips.forEach(ip => {
-      console.log(`  http://${ip}:${PORT}/games.json`);
-    });
+  console.log(`\nNetwork access:`);
+  console.log(`\nPlayer Stats:`);
+  console.log(`  http://${displayHost}:${PORT}/stats-points.json`);
+  console.log(`  http://${displayHost}:${PORT}/stats-goals.json`);
+  console.log(`  http://${displayHost}:${PORT}/stats-assists.json`);
+  console.log(`\nGoalie Stats:`);
+  console.log(`  http://${displayHost}:${PORT}/GK70plus.json`);
+  console.log(`  http://${displayHost}:${PORT}/GK70minus.json`);
+  console.log(`\nTeam Stats:`);
+  console.log(`  http://${displayHost}:${PORT}/standings.json`);
+  console.log(`  http://${displayHost}:${PORT}/Powerplay.json`);
+  console.log(`  http://${displayHost}:${PORT}/Underlage.json`);
+  console.log(`  http://${displayHost}:${PORT}/Current-streaks.json`);
+  console.log(`  http://${displayHost}:${PORT}/Season-streaks.json`);
+  console.log(`  http://${displayHost}:${PORT}/Shots.json`);
+  console.log(`  http://${displayHost}:${PORT}/Shootouts.json`);
+  console.log(`  http://${displayHost}:${PORT}/Attendance.json`);
+  console.log(`\nGames/Schedule:`);
+  console.log(`  http://${displayHost}:${PORT}/games.json`);
 
-    // Generate vMix URLs file
-    generateVmixUrlsFile(ips[0], PORT);
-  }
+  // Generate vMix URLs file
+  generateVmixUrlsFile(displayHost, PORT);
 
   console.log(`\nPress Ctrl+C to stop server\n`);
 });

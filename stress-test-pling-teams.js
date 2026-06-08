@@ -89,18 +89,17 @@ function initializeTeamFiles() {
       pling_Hometeam: game.home_team,
       pling_Hlogo: game.home_logo,
       pling_Hscore: "0",
+      pling_Homecolor: "#00000000",
       pling_Awayteam: game.away_team,
       pling_Alogo: game.away_logo,
-      pling_Ascore: "0"
+      pling_Ascore: "0",
+      pling_Awaycolor: "#00000000"
     }));
 
     const emptyData = {
       type: "pling",
       timestamp: new Date().toISOString(),
-      trigger: 0,
       count: teamGamesData.length,
-      team: team,
-      note: `This pling feed excludes games involving ${team}`,
       data: teamGamesData
     };
     fs.writeFileSync(filePath, JSON.stringify(emptyData, null, 2), { mode: 0o644 });
@@ -206,8 +205,6 @@ async function processQueue() {
         timestamp: new Date().toISOString(),
         trigger: triggerSeq,
         count: teamGamesData.length,
-        team: team,
-        note: `This pling feed excludes games involving ${team}`,
         data: teamGamesData
       };
 

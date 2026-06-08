@@ -5,7 +5,10 @@ const fsSync = require('fs');
 const url = "https://liguemagnus.com/calendrier-resultats/";
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
   const page = await browser.newPage();
 
   // Capture the games API call
@@ -50,14 +53,21 @@ const url = "https://liguemagnus.com/calendrier-resultats/";
 
   // Transform to simpler format
   const games = gamesData.map(game => {
-    // Extract scores from score array
+    // Extract scores from score array by matching equipe_id
     let home_score = null;
     let away_score = null;
     if (game.score && Array.isArray(game.score) && game.score.length >= 2) {
-      // First entry is usually home team
-      home_score = game.score[0].score;
-      // Second entry is usually away team
-      away_score = game.score[1].score;
+      // Match scores by team ID (equipe_id)
+      const homeTeamId = game.receveur?.id;
+      const awayTeamId = game.visiteur?.id;
+
+      game.score.forEach(scoreEntry => {
+        if (scoreEntry.equipe_id === homeTeamId) {
+          home_score = scoreEntry.score;
+        } else if (scoreEntry.equipe_id === awayTeamId) {
+          away_score = scoreEntry.score;
+        }
+      });
     }
 
     return {

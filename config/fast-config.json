@@ -2,7 +2,7 @@
   "scraper": {
     "urls": [
       {
-        "url": "https://liguemagnus.com/calendrier-resultats/",
+        "url": "https://liguemagnus.com/calendrier-resultats-po/?phase=652",
         "filename": "Todays_games.json",
         "type": "todaysgames",
         "useAPI": true,
@@ -14,7 +14,8 @@
   },
   "server": {
     "port": 3000,
-    "host": "0.0.0.0"
+    "host": "0.0.0.0",
+    "hostname": "data.borka.live"
   },
   "output": {
     "directory": "../output"

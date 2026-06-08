@@ -28,6 +28,8 @@ let httpServer = null;
 let fastScraper = null;
 let plingWatcher = null;
 let httpServerRestarts = 0;
+let fastScraperRestarts = 0;
+let plingWatcherRestarts = 0;
 let consecutiveFailures = 0;
 const logger = new Logger(config.logging);
 
@@ -110,7 +112,34 @@ function startFastScraper() {
 
     fastScraper.on('close', (code) => {
       logger.warn(`Fast scraper stopped with code ${code}`);
+
+      // Ensure old process is fully terminated
       fastScraper = null;
+
+      // Auto-restart fast scraper if it crashes
+      if (code !== 0 && code !== null) {
+        // Unexpected exit - attempt restart
+        if (fastScraperRestarts < MAX_RETRY_ATTEMPTS) {
+          fastScraperRestarts++;
+          logger.warn(`Attempting to restart fast scraper (${fastScraperRestarts}/${MAX_RETRY_ATTEMPTS})...`);
+          setTimeout(() => {
+            startFastScraper()
+              .then(() => {
+                fastScraperRestarts = 0;
+                logger.success('Fast scraper restarted successfully');
+              })
+              .catch(err => {
+                logger.error(`Failed to restart fast scraper: ${err.message}`);
+              });
+          }, 5000); // Wait 5 seconds before restart
+        } else {
+          logger.error('Fast scraper failed too many times. Manual restart required.');
+        }
+      } else if (code === 0) {
+        // Clean exit (e.g., all games finished) - this is expected
+        logger.info('Fast scraper exited cleanly (all games finished or shutdown requested)');
+        fastScraperRestarts = 0;
+      }
     });
 
     // Give it a moment to start
@@ -143,7 +172,34 @@ function startPlingWatcher() {
 
     plingWatcher.on('close', (code) => {
       logger.warn(`Pling watcher stopped with code ${code}`);
+
+      // Ensure old process is fully terminated
       plingWatcher = null;
+
+      // Auto-restart pling watcher if it crashes
+      if (code !== 0 && code !== null) {
+        // Unexpected exit - attempt restart
+        if (plingWatcherRestarts < MAX_RETRY_ATTEMPTS) {
+          plingWatcherRestarts++;
+          logger.warn(`Attempting to restart pling watcher (${plingWatcherRestarts}/${MAX_RETRY_ATTEMPTS})...`);
+          setTimeout(() => {
+            startPlingWatcher()
+              .then(() => {
+                plingWatcherRestarts = 0;
+                logger.success('Pling watcher restarted successfully');
+              })
+              .catch(err => {
+                logger.error(`Failed to restart pling watcher: ${err.message}`);
+              });
+          }, 5000); // Wait 5 seconds before restart
+        } else {
+          logger.error('Pling watcher failed too many times. Manual restart required.');
+        }
+      } else if (code === 0) {
+        // Clean exit (e.g., shutdown requested) - this is expected
+        logger.info('Pling watcher exited cleanly (shutdown requested)');
+        plingWatcherRestarts = 0;
+      }
     });
 
     // Give it a moment to start

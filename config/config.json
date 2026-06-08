@@ -2,22 +2,22 @@
   "scraper": {
     "urls": [
       {
-        "url": "https://liguemagnus.com/statistiques-individuelles/?tri_p=nombre_points-desc&actif=stats&onglet=joueurs&phase=560",
+        "url": "https://liguemagnus.com/statistiques-individuelles/?tri_p=nombre_points-desc&actif=stats&onglet=joueurs&phase=652",
         "filename": "stats-points.json",
         "type": "points"
       },
       {
-        "url": "https://liguemagnus.com/statistiques-individuelles/?phase=560&tri_p=nombre_buts-desc&actif=stats&onglet=joueurs",
+        "url": "https://liguemagnus.com/statistiques-individuelles/?phase=652&tri_p=nombre_buts-desc&actif=stats&onglet=joueurs",
         "filename": "stats-goals.json",
         "type": "goals"
       },
       {
-        "url": "https://liguemagnus.com/statistiques-individuelles/?phase=560&tri_p=nombre_assists-desc&actif=stats&onglet=joueurs",
+        "url": "https://liguemagnus.com/statistiques-individuelles/?phase=652&tri_p=nombre_assists-desc&actif=stats&onglet=joueurs",
         "filename": "stats-assists.json",
         "type": "assists"
       },
       {
-        "url": "https://liguemagnus.com/saison-reguliere/classement/?phase=560",
+        "url": "https://liguemagnus.com/saison-reguliere/classement/?phase=652",
         "filename": "standings.json",
         "type": "standings"
       },
@@ -34,60 +34,114 @@
         "tableIndex": 2
       },
       {
-        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=652",
         "filename": "Powerplay.json",
         "type": "powerplay",
         "tableIndex": 0
       },
       {
-        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=652",
         "filename": "Underlage.json",
         "type": "underlage",
         "tableIndex": 1
       },
       {
-        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=652",
         "filename": "Current-streaks.json",
         "type": "currentstreaks",
         "tableIndex": 2
       },
       {
-        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=652",
         "filename": "Season-streaks.json",
         "type": "seasonstreaks",
         "tableIndex": 3
       },
       {
-        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=652",
         "filename": "Shots.json",
         "type": "shots",
         "tableIndex": 4
       },
       {
-        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=652",
         "filename": "Shootouts.json",
         "type": "shootouts",
         "tableIndex": 5
       },
       {
-        "url": "https://liguemagnus.com/statistiques-collectives/?phase=560",
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=652",
         "filename": "Attendance.json",
         "type": "attendance",
         "tableIndex": 6
       },
       {
-        "url": "https://liguemagnus.com/calendrier-resultats/",
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=651",
+        "filename": "Playdown_powerplay.json",
+        "type": "playdown_powerplay",
+        "tableIndex": 0
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=651",
+        "filename": "Playdown_underlage.json",
+        "type": "playdown_underlage",
+        "tableIndex": 1
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=651",
+        "filename": "Playdown_current-streaks.json",
+        "type": "playdown_currentstreaks",
+        "tableIndex": 2
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=651",
+        "filename": "Playdown_season-streaks.json",
+        "type": "playdown_seasonstreaks",
+        "tableIndex": 3
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=651",
+        "filename": "Playdown_shots.json",
+        "type": "playdown_shots",
+        "tableIndex": 4
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=651",
+        "filename": "Playdown_shootouts.json",
+        "type": "playdown_shootouts",
+        "tableIndex": 5
+      },
+      {
+        "url": "https://liguemagnus.com/statistiques-collectives/?phase=651",
+        "filename": "Playdown_attendance.json",
+        "type": "playdown_attendance",
+        "tableIndex": 6
+      },
+      {
+        "url": "https://liguemagnus.com/calendrier-resultats-po/?phase=652",
         "filename": "Todays_games.json",
         "type": "todaysgames",
         "useAPI": true,
         "dateFilter": "today"
       },
       {
-        "url": "https://liguemagnus.com/calendrier-resultats/",
+        "url": "https://liguemagnus.com/calendrier-resultats-po/?phase=652",
         "filename": "Upcoming_games.json",
         "type": "upcominggames",
         "useAPI": true,
         "dateFilter": "upcoming"
+      },
+      {
+        "url": "https://liguemagnus.com/calendrier-resultats-po/?phase=652",
+        "filename": "Playoff_games.json",
+        "type": "playoffgames",
+        "useAPI": true
+      },
+      {
+        "url": "https://liguemagnus.com/calendrier-resultats-pm/?phase=651",
+        "filename": "Playdown_games.json",
+        "type": "playdowngames",
+        "useAPI": true
       }
     ],
     "intervalMinutes": 60,
@@ -95,7 +149,8 @@
   },
   "server": {
     "port": 3000,
-    "host": "0.0.0.0"
+    "host": "0.0.0.0",
+    "hostname": "data.borka.live"
   },
   "output": {
     "directory": "../output"
